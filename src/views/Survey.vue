@@ -10,6 +10,7 @@
 </template>
   
 <script>
+import { async } from "q";
 import * as SurveyVue from "survey-vue";
 let Surver = SurveyVue.Survey;// 定义一个survey 将会在组件中使用他
 
@@ -52,30 +53,56 @@ export default {
         .get()
         .then(result => {
           let data = {
-            title: "问卷调查系统",// 标题
+            title: "前端程序员的相关问卷",// 标题
             pages: [// pages中有几个对象就表示有几个页面，这里只要一个页面
               {
                 questions: [
                   ...result.data
                 ]
-              }
+              },
+              // {
+              //   questions: [
+              //     {
+              //       "type": "radiogroup",
+              //       "name": "customer_role",
+              //       "title": "您觉得合理的工资",
+              //       "showOtherItem": true,
+              //       "choices": [
+              //         "5k-6k",
+              //         "6k-7k",
+              //         "7k-8k",
+              //         "8k-9k",
+              //         "1w",
+              //       ],
+              //       "otherText": "其他",
+              //       "colCount": 3
+              //     },
+              //   ]
+              // }
             ]
           }
 
           SurveyVue.StylesManager.applyTheme("bootstrap");//Survey的样式设置
           let model = new SurveyVue.Model(data);
+          // 上传文件之前进行处理
+          model.onUploadFiles.add()
           model.onComplete.add(result => {
-            db.collection("answer")
-              .add(result.data)
-              .then(res => {
-                this.$bvToast.toast('谢谢你,您的提交对我们很有用', {
-                  title: "提交成功",
-                  variant: "success",
-                  solid: true
-                })
+            console.log(this.$cloudbase.uploadFile)
+            console.log(result.data)
+            // return;
+            //这里result 是用户提交的表单内容
+            this.$cloudbase.callFunction({//运行腾讯云函数
+              name: "uploadAnswer",// 函数名字
+              data: result.data,// 传入函数的参数
+            }).then((res) => {
+              const { msg } = res.result;
+              this.$bvToast.toast("感谢您的提交", {
+                title: msg,
+                variant: "success",
+                solid: true
               })
-              .catch(err => { console.log(err) })
-            // console.log(this.result)
+            })
+              .catch((err) => { console.log(err, "执行错误") })
           })
           this.survey = model;
 
