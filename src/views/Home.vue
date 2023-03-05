@@ -37,6 +37,7 @@ export default {
         solid: true
       })
     },
+    // 登录函数
     loginHandle() {
       const app = this.$cloudbase;// 云开发的实例
       app
@@ -47,9 +48,29 @@ export default {
           this.makeToast("success", "登录成功");
           setTimeout(() => this.$router.push({ name: "Survey" }), 1500);
         }).catch((err) => {
-          console.log("登录失败", err)
+          const errinfo = `${err}`
+          const index = errinfo.indexOf("{")
+          const errinObj = JSON.parse(errinfo.substring(index));
+          const errMsg = errinObj.msg;
+          // this.makeToast("danger", "登录失败请检查邮箱和密码是否正确");          
+          if (errMsg === "[INVALID_PARAM] [100003] account email invalid") {
+            this.makeToast("danger", "无效的电子邮箱，请检查后填入","邮箱错误");
+            return;
+          }
+          if (errMsg === "[AUTH_LOGIN_FAILED] [102001] account auth fail") {
+            this.makeToast("danger", "身份校验失败,请重试",'登录失败');
+            return;
+          }
+          if (errMsg === "[INVALID_PARAM] [102003] mail user not exist") {
+            this.makeToast("info", "此电子邮箱还未注册，请先注册","还未注册");
+            return;
+          }
+          
+          this.makeToast("info", "系统错误");
+
         })
     },
+    // 注册函数
     signupHandle() {
       console.log("注册")
       const app = this.$cloudbase;
@@ -66,14 +87,14 @@ export default {
             return;
           }
           if (errinObj.msg === `[INVALID_PARAM] [100003] mail addr is invalid`) {
-            this.makeToast("danger", "这是一个错误的邮箱地址","注册失败");
+            this.makeToast("danger", "这是一个错误的邮箱地址", "注册失败");
             return;
           }
           if (errinObj.msg === `[INVALID_PARAM] [100003] pwd is weak`) {
-            this.makeToast("warning", "密码太简单了，请换个难一点的密码","请再次重试");
+            this.makeToast("warning", "密码太简单了，请换个难一点的密码", "请再次重试");
             return;
           }
-          this.makeToast("danger","请检查输入的邮箱是否正确,密码是否太简单")
+          this.makeToast("danger", "请检查输入的邮箱是否正确,密码是否太简单")
         });
     }
   },

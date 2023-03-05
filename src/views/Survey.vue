@@ -61,10 +61,21 @@ export default {
               }
             ]
           }
+
           SurveyVue.StylesManager.applyTheme("bootstrap");//Survey的样式设置
           let model = new SurveyVue.Model(data);
           model.onComplete.add(result => {
-            this.result = result.data;
+            db.collection("answer")
+              .add(result.data)
+              .then(res => {
+                this.$bvToast.toast('谢谢你,您的提交对我们很有用', {
+                  title: "提交成功",
+                  variant: "success",
+                  solid: true
+                })
+              })
+              .catch(err => { console.log(err) })
+            // console.log(this.result)
           })
           this.survey = model;
 
